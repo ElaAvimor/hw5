@@ -78,10 +78,8 @@ scene.add(directionalLight);
 // Goal setup
 const goal = new THREE.Group();
 scene.add(goal);
-
 const skeleton = new THREE.Group();
 goal.add(skeleton);
-
 const nets = new THREE.Group();
 goal.add(nets);
 
@@ -119,6 +117,31 @@ crossbar.add(connectLeft);
 
 
 
+
+
+
+// Interactive:
+let animate1 = false;
+let animate2 = false;
+let animate3 = false;
+let speed = 0.7
+;
+function ballAnimate() {
+    if (animate1) {
+        ball.applyMatrix4(rotateX(2 * speed));
+    }
+
+    if (animate2) {
+        ball.applyMatrix4(rotateY(2 * speed));
+    }
+
+    if (animate3) {
+        const scaleMatrix = new THREE.Matrix4().makeScale(0.95, 0.95, 0.95);
+        goal.applyMatrix4(scaleMatrix);
+
+        animate3 = false;  // Reset the animation flag.
+    }
+}
 
 
 // This defines the initial distance of the camera
