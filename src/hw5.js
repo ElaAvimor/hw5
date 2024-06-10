@@ -117,6 +117,13 @@ connectLeft.applyMatrix4(translation(0, -CROSSBAR_LENGTH / 2, 0));
 crossbar.add(connectRight);
 crossbar.add(connectLeft);
 
+// Adding the net
+const netGeometry = new THREE.PlaneGeometry(CROSSBAR_LEN, POST_LEN / Math.cos(degrees_to_radians(BACK_SUPPORT_ANGLE)));
+const backNet = new THREE.Mesh(netGeometry, netMaterial);
+backNet.applyMatrix4(rotate(BACK_SUPPORT_ANGLE,'x'));
+backNet.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTransSupport));
+nets.add(backNet);
+
 
 
 
