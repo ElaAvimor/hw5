@@ -84,25 +84,27 @@ const nets = new THREE.Group();
 goal.add(nets);
 
 // Creating the ball.
-const ballGeometry = new THREE.SphereGeometry(POST_LEN / 16, 32, 16);
+const ballGeometry = new THREE.SphereGeometry(GOAL_POST_LENGTH / 16, 32, 16);
 const ballMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
 const ball = new THREE.Mesh(ballGeometry, ballMaterial);
-ball.applyMatrix4(translation(0, -POST_LEN * 0.5, 0.75));
+ball.applyMatrix4(translation(0, -GOAL_POST_LENGTH * 0.5, 0.75));
 scene.add(ball);
 
 // Creating the crossbar
 const crossbarGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, CROSSBAR_LENGTH, 32);
 const crossbar = new THREE.Mesh(crossbarGeometry, goalMaterial);
-crossbar.applyMatrix4(rotate(90, z));
+crossbar.applyMatrix4(rotate(90, 'z'));
 skeleton.add(crossbar);
 
 // Adding goal posts.
-const leftPost = createPost(POST_LEN);
-const rightPost = createPost(POST_LEN);
-leftPost.applyMatrix4(translation(-CROSSBAR_LEN / 2, -POST_LEN / 2, 0));
-rightPost.applyMatrix4(translation(CROSSBAR_LEN / 2, -POST_LEN / 2, 0));
-skeleton.add(leftPost);
-skeleton.add(rightPost);
+const goalPostGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, GOAL_POST_LENGTH, 32);
+const leftGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
+const rightGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
+
+leftGoalPost.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, 0));
+rightGoalPost.applyMatrix4(translation(CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, 0));
+skeleton.add(leftGoalPost);
+skeleton.add(rightGoalPost);
 
 const connectGeometry = new THREE.SphereGeometry(SKELETON_RADIUS, 32, 16);
 const connectRight = new THREE.Mesh(connectGeometry, goalMaterial);
