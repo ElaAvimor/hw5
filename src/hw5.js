@@ -22,6 +22,104 @@ const material = new THREE.MeshBasicMaterial( {color: 0x000000} );
 const cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
+// Geometry constants.
+const SKELETON_RADIUS = 0.05;
+const CROSSBAR_LENGTH = 3.0;
+const GOAL_POST_LENGTH = CROSSBAR_LENGTH / 3;
+const BACK_SUPPORT_ANGLE = 45;
+
+// Materials
+const goalMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
+const netMaterial = new THREE.MeshBasicMaterial({color: 0x888888, side: THREE.DoubleSide});
+
+// Rotation matrix about the x,y,z axes.
+function rotate(theta, axis) {
+	let m = new THREE.Matrix4();
+	theta = degrees_to_radians(theta)
+
+	if(axis == 'x'){
+		m.set(1, 0, 0, 0,
+			0, Math.cos(theta), -Math.sin(theta), 0,
+			0, Math.sin(theta), Math.cos(theta), 0,
+			0, 0, 0, 1);
+	}
+	else if(axis == 'y'){
+		m.set(Math.cos(theta), 0, Math.sin(theta), 0, 
+		0, 1, 0, 0,
+		-Math.sin(theta), 0, Math.cos(theta), 0, 
+		0, 0, 0, 1);
+	}
+	else if(axis == 'z'){
+		m.set(Math.cos(theta), -Math.sin(theta), 0, 0,
+		Math.sin(theta), Math.cos(theta), 0, 0, 
+		0, 0, 1, 0, 
+		0, 0, 0, 1);
+	}
+
+	return m;
+}
+
+
+// General translation matrix.
+function translation(x, y, z) {
+    let m = new THREE.Matrix4();
+    m.set(1, 0, 0, x, 
+		  0, 1, 0, y,
+          0, 0, 1, z,
+          0, 0, 0, 1);
+    return m
+}
+
+// Setting up lighting.
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1, 1, 1);
+scene.add(directionalLight);
+
+// Goal setup
+const goal = new THREE.Group();
+scene.add(goal);
+
+const skeleton = new THREE.Group();
+goal.add(skeleton);
+
+const nets = new THREE.Group();
+goal.add(nets);
+
+// Creating the ball.
+const ballGeometry = new THREE.SphereGeometry(POST_LEN / 16, 32, 16);
+const ballMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
+const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+ball.applyMatrix4(translation(0, -POST_LEN * 0.5, 0.75));
+scene.add(ball);
+
+// Creating the crossbar
+const crossbarGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, CROSSBAR_LENGTH, 32);
+const crossbar = new THREE.Mesh(crossbarGeometry, goalMaterial);
+crossbar.applyMatrix4(rotate(90, z));
+skeleton.add(crossbar);
+
+// Adding goal posts.
+const leftPost = createPost(POST_LEN);
+const rightPost = createPost(POST_LEN);
+leftPost.applyMatrix4(translation(-CROSSBAR_LEN / 2, -POST_LEN / 2, 0));
+rightPost.applyMatrix4(translation(CROSSBAR_LEN / 2, -POST_LEN / 2, 0));
+skeleton.add(leftPost);
+skeleton.add(rightPost);
+
+const connectGeometry = new THREE.SphereGeometry(SKELETON_RADIUS, 32, 16);
+const connectRight = new THREE.Mesh(connectGeometry, goalMaterial);
+const connectLeft = new THREE.Mesh(connectGeometry, goalMaterial);
+
+// Translate the connection Fillers to the end points of the crossbar
+connectRight.applyMatrix4(translation(0, CROSSBAR_LENGTH / 2, 0));
+connectLeft.applyMatrix4(translation(0, -CROSSBAR_LENGTH / 2, 0));
+
+crossbar.add(connectRight);
+crossbar.add(connectLeft);
+
+
+
+
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
