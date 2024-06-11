@@ -14,13 +14,6 @@ function degrees_to_radians(degrees)
   return degrees * (pi/180);
 }
 
-// Add here the rendering of your goal
-
-// This is a sample box.
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( {color: 0x000000} );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
 
 // Geometry constants.
 const SKELETON_RADIUS = 0.05;
@@ -118,18 +111,64 @@ crossbar.add(connectRight);
 crossbar.add(connectLeft);
 
 let zSupport = -GOAL_POST_LENGTH / 2 * Math.tan(degrees_to_radians(BACK_SUPPORT_ANGLE));
-// Adding the net
+// Adding the nets
 const netGeometry = new THREE.PlaneGeometry(CROSSBAR_LENGTH, GOAL_POST_LENGTH / Math.cos(degrees_to_radians(BACK_SUPPORT_ANGLE)));
 const backNet = new THREE.Mesh(netGeometry, netMaterial);
+const rightNet = new THREE.Mesh(triangleGeometry, netMaterial);
+const leftNet = new THREE.Mesh(triangleGeometry, netMaterial);
 backNet.applyMatrix4(rotate(BACK_SUPPORT_ANGLE,'x'));
 backNet.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zSupport));
+rightNet.applyMatrix4(rotate(-90, 'y'))
+leftNet.applyMatrix4(rotate(-90, 'y'))
+rightNet.applyMatrix4(translation(CROSSBAR_LENGTH / 2, 0, 0));
+leftNet.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, 0, 0));
+nets.add(rightNet);
+nets.add(leftNet);
 nets.add(backNet);
 
+//adding the toruses
+let zTorus= -GOAL_POST_LENGTH / Math.tan(degrees_to_radians(BACK_SUPPORT_ANGLE)) / 2;
+const torusGeometry = new THREE.TorusGeometry(SKELETON_RADIUS * 1.25, SKELETON_RADIUS * 0.75, 32, 100);
+const frontRightTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+const frontLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+const backLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+const backRightTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+frontRightTorus.applyMatrix4(rotate(90), 'x');
+frontRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, 0));
+frontLeftTorus.applyMatrix4(rotate(90), 'x');
+frontLeftTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, 0));
+backRightTorus.applyMatrix4(rotateX(90));
+backRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
+backLeftTorus.applyMatrix4(rotateX(90));
+backLeftTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
 
 
 
 
 
+
+
+//event listener
+
+document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+        case '1':
+            animate1 = !animate1;
+            break;
+        case '2':
+            animate2 = !animate2;
+            break;
+        case '3':
+            animate3 = !animate3;
+            break;
+        case 'ArrowUp':
+            speedFactor *= 1.1;
+            break;
+        case 'ArrowDown':
+            speedFactor /= 1.1;
+            break;
+	}
+});
 // Interactive:
 let animate1 = false;
 let animate2 = false;
@@ -138,11 +177,11 @@ let speed = 0.7
 ;
 function ballAnimate() {
     if (animate1) {
-        ball.applyMatrix4(rotateX(2 * speed));
+        ball.applyMatrix4(rotate(2 * speed, 'x'));
     }
 
     if (animate2) {
-        ball.applyMatrix4(rotateY(2 * speed));
+        ball.applyMatrix4(rotate(2 * speed, 'y'));
     }
 
     if (animate3) {
