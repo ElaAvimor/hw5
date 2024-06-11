@@ -14,16 +14,20 @@ function degrees_to_radians(degrees)
   return degrees * (pi/180);
 }
 
+// Attribute for turning all wireFrames on and off
+let isWireFrameEnabled = false;
 
 // Geometry constants.
 const SKELETON_RADIUS = 0.05;
 const CROSSBAR_LENGTH = 3.0;
 const GOAL_POST_LENGTH = CROSSBAR_LENGTH / 3;
-const BACK_SUPPORT_ANGLE = 45;
+const POSTS_ANGLE = 35;
 
 // Materials
-const goalMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
-const netMaterial = new THREE.MeshBasicMaterial({color: 0x888888, side: THREE.DoubleSide});
+const goalMaterial = new THREE.MeshPhongMaterial({color: "white", wireframe: isWireFrameEnabled});
+const netMaterial = new THREE.MeshBasicMaterial({color: 0x888888, side: THREE.DoubleSide, wireframe: isWireFrameEnabled});
+const ballMaterial = new THREE.MeshPhongMaterial({color: 0x000000, wireframe: isWireFrameEnabled});
+
 
 // Rotation matrix about the x,y,z axes.
 function rotate(theta, axis) {
@@ -63,12 +67,12 @@ function translation(x, y, z) {
     return m
 }
 
-// Setting up lighting.
+// Setting up lighting for the MeshPhongMaterial
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
-// Goal setup
+// Structure setup
 const goal = new THREE.Group();
 scene.add(goal);
 const skeleton = new THREE.Group();
@@ -76,92 +80,128 @@ goal.add(skeleton);
 const nets = new THREE.Group();
 goal.add(nets);
 
-// Creating the ball.
-const ballGeometry = new THREE.SphereGeometry(GOAL_POST_LENGTH / 16, 32, 16);
-const ballMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
-const ball = new THREE.Mesh(ballGeometry, ballMaterial);
-ball.applyMatrix4(translation(0, -GOAL_POST_LENGTH * 0.5, 0.75));
-scene.add(ball);
 
-// Creating the crossbar
+/* Goal - Skeleton elements:*/
+// Crossbar
 const crossbarGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, CROSSBAR_LENGTH, 32);
+
 const crossbar = new THREE.Mesh(crossbarGeometry, goalMaterial);
 crossbar.applyMatrix4(rotate(90, 'z'));
 skeleton.add(crossbar);
 
-// Adding goal posts.
+// Goal posts
 const goalPostGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, GOAL_POST_LENGTH, 32);
-const leftGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
-const rightGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
 
+const leftGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
 leftGoalPost.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, 0));
-rightGoalPost.applyMatrix4(translation(CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, 0));
 skeleton.add(leftGoalPost);
+
+const rightGoalPost = new THREE.Mesh(goalPostGeometry, goalMaterial);
+rightGoalPost.applyMatrix4(translation(CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, 0));
 skeleton.add(rightGoalPost);
 
-const connectGeometry = new THREE.SphereGeometry(SKELETON_RADIUS, 32, 16);
-const connectRight = new THREE.Mesh(connectGeometry, goalMaterial);
-const connectLeft = new THREE.Mesh(connectGeometry, goalMaterial);
+// Back supports
+let zSupport = -GOAL_POST_LENGTH / 2 * Math.tan(degrees_to_radians(POSTS_ANGLE));
+const BackSupportGeometry = new THREE.CylinderGeometry(SKELETON_RADIUS, SKELETON_RADIUS, GOAL_POST_LENGTH / Math.cos(degrees_to_radians(POSTS_ANGLE)), 32);
 
-// Translate the connection Fillers to the end points of the crossbar
-connectRight.applyMatrix4(translation(0, CROSSBAR_LENGTH / 2, 0));
-connectLeft.applyMatrix4(translation(0, -CROSSBAR_LENGTH / 2, 0));
+const rightBackSupport = new THREE.Mesh(BackSupportGeometry, goalMaterial);
+rightBackSupport.applyMatrix4(rotate(POSTS_ANGLE, 'x'));
+rightBackSupport.applyMatrix4(translation(CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, zSupport));
+skeleton.add(rightBackSupport);
 
-crossbar.add(connectRight);
-crossbar.add(connectLeft);
+const leftBackSupport = new THREE.Mesh(BackSupportGeometry, goalMaterial);
+leftBackSupport.applyMatrix4(rotate(POSTS_ANGLE, 'x'));
+leftBackSupport.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, -GOAL_POST_LENGTH / 2, zSupport));
+skeleton.add(leftBackSupport);
 
-let zSupport = -GOAL_POST_LENGTH / 2 * Math.tan(degrees_to_radians(BACK_SUPPORT_ANGLE));
-// Adding the nets
-const netGeometry = new THREE.PlaneGeometry(CROSSBAR_LENGTH, GOAL_POST_LENGTH / Math.cos(degrees_to_radians(BACK_SUPPORT_ANGLE)));
+// Handles the post and support intersections
+const postSupportIntersection = new THREE.SphereGeometry(SKELETON_RADIUS, 32, 16);
+
+const rightIntersection = new THREE.Mesh(postSupportIntersection, goalMaterial);
+rightIntersection.applyMatrix4(translation(0, CROSSBAR_LENGTH / 2, 0));
+crossbar.add(rightIntersection);
+
+const leftIntersection = new THREE.Mesh(postSupportIntersection, goalMaterial);
+leftIntersection.applyMatrix4(translation(0, -CROSSBAR_LENGTH / 2, 0));
+crossbar.add(leftIntersection);
+
+
+
+/* Goal - Nets elements (rectangular and triangular) */
+const netGeometry = new THREE.PlaneGeometry(CROSSBAR_LENGTH, GOAL_POST_LENGTH / Math.cos(degrees_to_radians(POSTS_ANGLE)));
+
 const backNet = new THREE.Mesh(netGeometry, netMaterial);
-const rightNet = new THREE.Mesh(triangleGeometry, netMaterial);
-const leftNet = new THREE.Mesh(triangleGeometry, netMaterial);
-backNet.applyMatrix4(rotate(BACK_SUPPORT_ANGLE,'x'));
+backNet.applyMatrix4(rotate(POSTS_ANGLE,'x'));
 backNet.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zSupport));
-rightNet.applyMatrix4(rotate(-90, 'y'))
-leftNet.applyMatrix4(rotate(-90, 'y'))
-rightNet.applyMatrix4(translation(CROSSBAR_LENGTH / 2, 0, 0));
-leftNet.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, 0, 0));
-nets.add(rightNet);
-nets.add(leftNet);
 nets.add(backNet);
 
-//adding the toruses
-let zTorus= -GOAL_POST_LENGTH / Math.tan(degrees_to_radians(BACK_SUPPORT_ANGLE)) / 2;
+// Building the triangle shape for the side nets
+const triangleShape = new THREE.Shape();
+let zTorus= -GOAL_POST_LENGTH / Math.tan(degrees_to_radians(POSTS_ANGLE)) / 2;
+triangleShape.moveTo(0, 0); 
+triangleShape.lineTo(0, -GOAL_POST_LENGTH); 
+triangleShape.lineTo(zTorus, -GOAL_POST_LENGTH); 
+triangleShape.lineTo(0, 0); 
+
+const triangleGeometry = new THREE.ShapeGeometry(triangleShape);
+
+const rightNet = new THREE.Mesh(triangleGeometry, netMaterial);
+rightNet.applyMatrix4(rotate(-90, 'y'));
+rightNet.applyMatrix4(translation(CROSSBAR_LENGTH / 2, 0, 0));
+nets.add(rightNet);
+
+const leftNet = new THREE.Mesh(triangleGeometry, netMaterial);
+leftNet.applyMatrix4(rotate(-90, 'y'));
+leftNet.applyMatrix4(translation(-CROSSBAR_LENGTH / 2, 0, 0));
+nets.add(leftNet);
+
+// Adding the toruses
 const torusGeometry = new THREE.TorusGeometry(SKELETON_RADIUS * 1.25, SKELETON_RADIUS * 0.75, 32, 100);
+
 const frontRightTorus = new THREE.Mesh(torusGeometry, goalMaterial);
-const frontLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
-const backLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
-const backRightTorus = new THREE.Mesh(torusGeometry, goalMaterial);
-frontRightTorus.applyMatrix4(rotate(90), 'x');
+frontRightTorus.applyMatrix4(rotate(90, 'x'));
 frontRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, 0));
-frontLeftTorus.applyMatrix4(rotate(90), 'x');
+rightGoalPost.add(frontRightTorus);
+
+const frontLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+frontLeftTorus.applyMatrix4(rotate(90, 'x'));
 frontLeftTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, 0));
-backRightTorus.applyMatrix4(rotateX(90));
-backRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
-backLeftTorus.applyMatrix4(rotateX(90));
+leftGoalPost.add(frontLeftTorus);
+
+const backLeftTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+backLeftTorus.applyMatrix4(rotate(90, 'x'));
 backLeftTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
-skeleton.add(frontRightTorus);
-skeleton.add(frontLeftTorus);
-skeleton.add(backRightTorus);
-skeleton.add(backLeftTorus);
+leftGoalPost.add(backLeftTorus);
+
+const backRightTorus = new THREE.Mesh(torusGeometry, goalMaterial);
+backRightTorus.applyMatrix4(rotate(90, 'x'));
+backRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
+rightGoalPost.add(backRightTorus);
+
+// Ball
+const ballGeometry = new THREE.SphereGeometry(GOAL_POST_LENGTH / 16, 32, 16);
+const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+ball.applyMatrix4(translation(0, -GOAL_POST_LENGTH * 0.25, 0.75));
+scene.add(ball);
 
 
-
-
+// Interactivity:
+let rotateBallY = false;
+let rotateBallZ = false;
+let shrinkGoal = false;
+let speedFactor = 1;
 
 //event listener
-
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case '1':
-            animate1 = !animate1;
+            rotateBallY = !rotateBallY;
             break;
         case '2':
-            animate2 = !animate2;
+            rotateBallZ = !rotateBallZ;
             break;
         case '3':
-            animate3 = !animate3;
+            shrinkGoal = !shrinkGoal;
             break;
         case 'ArrowUp':
             speedFactor *= 1.1;
@@ -171,26 +211,22 @@ document.addEventListener('keydown', (event) => {
             break;
 	}
 });
-// Interactive:
-let animate1 = false;
-let animate2 = false;
-let animate3 = false;
-let speed = 0.7
-;
-function ballAnimate() {
-    if (animate1) {
-        ball.applyMatrix4(rotate(2 * speed, 'x'));
+
+
+function ballAnimation() {
+    if (rotateBallY) {
+        ball.applyMatrix4(rotate(2 * speedFactor, 'y'));
     }
 
-    if (animate2) {
-        ball.applyMatrix4(rotate(2 * speed, 'y'));
+    if (rotateBallZ) {
+        ball.applyMatrix4(rotate(2 * speedFactor, 'z'));
     }
 
-    if (animate3) {
+    if (shrinkGoal) {
         const scaleMatrix = new THREE.Matrix4().makeScale(0.95, 0.95, 0.95);
         goal.applyMatrix4(scaleMatrix);
 
-        animate3 = false;  // Reset the animation flag.
+        shrinkGoal = false;  // Reset the animation flag.
     }
 }
 
@@ -205,6 +241,7 @@ renderer.render( scene, camera );
 const controls = new OrbitControls( camera, renderer.domElement );
 
 let isOrbitEnabled = true;
+isWireFrameEnabled = false;
 
 const toggleOrbit = (e) => {
 	if (e.key == "o"){
@@ -212,7 +249,18 @@ const toggleOrbit = (e) => {
 	}
 }
 
-document.addEventListener('keydown',toggleOrbit)
+const toggleWireFrame = (e) => {
+    if (e.key == "w") {
+        isWireFrameEnabled = !isWireFrameEnabled;
+        goalMaterial.wireframe = isWireFrameEnabled;
+        netMaterial.wireframe = isWireFrameEnabled;
+        ballMaterial.wireframe = isWireFrameEnabled;
+    }
+}
+
+document.addEventListener('keydown',toggleOrbit);
+document.addEventListener('keydown', toggleWireFrame);
+
 
 //controls.update() must be called after any manual changes to the camera's transform
 controls.update();
@@ -223,6 +271,8 @@ function animate() {
 
 	controls.enabled = isOrbitEnabled;
 	controls.update();
+
+    ballAnimation();
 
 	renderer.render( scene, camera );
 
