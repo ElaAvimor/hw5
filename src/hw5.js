@@ -141,8 +141,10 @@ backRightTorus.applyMatrix4(rotateX(90));
 backRightTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
 backLeftTorus.applyMatrix4(rotateX(90));
 backLeftTorus.applyMatrix4(translation(0, -GOAL_POST_LENGTH / 2, zTorus));
-
-
+skeleton.add(frontRightTorus);
+skeleton.add(frontLeftTorus);
+skeleton.add(backRightTorus);
+skeleton.add(backLeftTorus);
 
 
 
