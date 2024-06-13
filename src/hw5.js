@@ -185,6 +185,56 @@ ball.applyMatrix4(translation(0, -GOAL_POST_LENGTH * 0.25, 0.75));
 scene.add(ball);
 
 
+//Bonus: 2 red flags on both sides of the goal:
+// Flag Constants
+const FLAG_POST_HEIGHT = GOAL_POST_LENGTH * 1.2;  // Make the flag post taller than the goal post.
+const FLAG_POST_RADIUS = SKELETON_RADIUS;  // Same radius as the skeleton of the goal.
+const FLAG_WIDTH = CROSSBAR_LENGTH / 4;
+const FLAG_HEIGHT = GOAL_POST_LENGTH / 2;
+
+// Flag Materials
+const flagPostMaterial = new THREE.MeshPhongMaterial({ color: 'black', wireframe: isWireFrameEnabled });
+const flagMaterial = new THREE.MeshPhongMaterial({ color: 'red', wireframe: isWireFrameEnabled });
+
+// Flag Post Geometry
+const flagPostGeometry = new THREE.CylinderGeometry(FLAG_POST_RADIUS, FLAG_POST_RADIUS, FLAG_POST_HEIGHT, 32);
+
+// Flag Geometry
+const flagShape = new THREE.Shape();
+flagShape.moveTo(0, 0);
+flagShape.lineTo(FLAG_WIDTH, 0);
+flagShape.lineTo(FLAG_WIDTH / 2, FLAG_HEIGHT);
+flagShape.lineTo(0, 0);
+const flagGeometry = new THREE.ShapeGeometry(flagShape);
+
+// Creating flags
+function createFlag(xPosition) {
+    const flagPost = new THREE.Mesh(flagPostGeometry, flagPostMaterial);
+    // Set the bottom of the flag post to align with the bottom of the goal post
+    flagPost.position.set(xPosition, -GOAL_POST_LENGTH / 2, 0);
+
+    const flag = new THREE.Mesh(flagGeometry, flagMaterial);
+    // Position the triangle at the top of the post
+    flag.position.set(xPosition, GOAL_POST_LENGTH / 3.5 - FLAG_POST_HEIGHT + FLAG_HEIGHT / 2, 0);
+    flag.rotation.z = Math.PI / 2;  // Rotate to position perpendicular
+
+    // Orient the flag based on the side to point away from the goal
+    if (xPosition < 0) {
+        flag.rotation.y = Math.PI * 2;  // For the left flag, rotate to ensure it points outward to the left
+    } else {
+        flag.rotation.y =  - Math.PI;  // For the right flag, rotate to ensure it points outward to the right
+    }
+    // Add to the scene
+    skeleton.add(flagPost);
+    skeleton.add(flag);
+}
+// Add flags to both sides of the goal, slightly outside the crossbar ends
+const flagOffset = FLAG_WIDTH / 2 + FLAG_POST_RADIUS;  // Calculate the flag offset from the goal ends
+createFlag(-CROSSBAR_LENGTH / 2 - flagOffset);  // Left flag
+createFlag(CROSSBAR_LENGTH / 2 + flagOffset);  // Right flag
+
+
+
 // Interactivity:
 let rotateBallY = false;
 let rotateBallZ = false;
@@ -203,10 +253,10 @@ document.addEventListener('keydown', (event) => {
         case '3':
             shrinkGoal = !shrinkGoal;
             break;
-        case 'ArrowUp':
+        case '+':
             speedFactor *= 1.1;
             break;
-        case 'ArrowDown':
+        case '-':
             speedFactor /= 1.1;
             break;
 	}
