@@ -5,5 +5,6 @@
 * Another wing was added to the spaceship in order to make it look more symmetrically. (so 4 wings in total)
 * We added an additional animation (toggle on with '4' keyboard key) which make our planet (Earth) rotate around iteself and around the sun.
  and also the sun rotate around itself.
+* Bonus: added 2 red flags one of each side of the goal
 
 

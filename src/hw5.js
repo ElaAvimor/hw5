@@ -1,5 +1,5 @@
 import {OrbitControls} from './OrbitControls.js'
-
+import * as THREE from 'three';
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
@@ -193,8 +193,8 @@ const FLAG_WIDTH = CROSSBAR_LENGTH / 4;
 const FLAG_HEIGHT = GOAL_POST_LENGTH / 2;
 
 // Flag Materials
-const flagPostMaterial = new THREE.MeshPhongMaterial({ color: 'black', wireframe: isWireFrameEnabled });
-const flagMaterial = new THREE.MeshPhongMaterial({ color: 'red', wireframe: isWireFrameEnabled });
+const flagPostMaterial = new THREE.MeshPhongMaterial({ color: 'black', wireframe: isWireFrameEnabled, side: THREE.DoubleSide});
+const flagMaterial = new THREE.MeshPhongMaterial({ color: 'red', wireframe: isWireFrameEnabled, side: THREE.DoubleSide });
 
 // Flag Post Geometry
 const flagPostGeometry = new THREE.CylinderGeometry(FLAG_POST_RADIUS, FLAG_POST_RADIUS, FLAG_POST_HEIGHT, 32);
